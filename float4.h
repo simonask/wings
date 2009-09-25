@@ -7,6 +7,9 @@
  *
  */
 
+#ifndef _FLOAT4_H_
+#define _FLOAT4_H_
+
 #include "basic.h"
 
 #include <xmmintrin.h>
@@ -15,32 +18,22 @@
 
 
 // declarations
+namespace wings
+{
 
 typedef __m128 float4;
+struct ALIGNED(16) float4s;
 
-typedef struct ALIGNED(16) {
-	// The float4s struct is the "storage" type of float4, which should be used when saving a float4 to memory.
-	union {
-		struct {
-			float x, y, z, w;
-		};
-		float v[4];
-	};
-} float4s;
-
-typedef union {
-	float4 m;
-	float v[4];
+union any4 {
+	float4 v;
+	float f[4];
 	uint32_t u[4];
 	int32_t n[4];
-} any4;
-
-static const any4 wmask_xyz = {
-	.u = {0xffffffff, 0xffffffff, 0xffffffff, 0x0}
 };
 
-FORCE_INLINE void wstore(float4s* s, float4 v);
-FORCE_INLINE float4 wload(float4s* s);
+static const any4 wmask_xyz = { { 0xffffffff, 0xffffffff, 0xffffffff, 0x0 } };
+
+FORCE_INLINE void wstore(float4s&, float4);
 FORCE_INLINE float4 wzero();
 FORCE_INLINE float4 wreplicate(float f);
 FORCE_INLINE float4 wset(float x, float y, float z, float w);
@@ -67,15 +60,18 @@ FORCE_INLINE float4 wrol(float4 v);
 FORCE_INLINE float4 wdot3(float4 a, float4 b);
 static inline void wprint(float4 w);
 
+struct ALIGNED(16) float4s {
+	union {
+		float4 m;
+		struct { float x, y, z, w; };
+		float v[4];
+	};
+};
 
 // definitions
-
-void wstore(float4s* s, float4 v) {
-	_mm_store_ps((float*)&s->v, v);
-}
-
-float4 wload(float4s* s) {
-	return _mm_load_ps((float*)&s->v);
+	
+void wstore(float4s& v, float4 m) {
+	_mm_store_ps((float*)&v.v, m);
 }
 
 float4 wzero() {
@@ -101,25 +97,25 @@ float4 wvector2(float x, float y) {
 
 float wgetx(float4 v) {
 	float4s s;
-	wstore(&s, v);
+	wstore(s, v);
 	return s.x;
 }
 
 float wgety(float4 v) {
 	float4s s;
-	wstore(&s, v);
+	wstore(s, v);
 	return s.y;
 }
 
 float wgetz(float4 v) {
 	float4s s;
-	wstore(&s, v);
+	wstore(s, v);
 	return s.z;
 }
 
 float wgetw(float4 v) {
 	float4s s;
-	wstore(&s, v);
+	wstore(s, v);
 	return s.w;
 }
 
@@ -192,7 +188,7 @@ float4 wror(float4 v) {
 
 float4 wdot3(float4 a, float4 b) {
 #ifdef __SSE3__
-	register float4 m = wand(wmul(a, b), wmask_xyz.m);
+	register float4 m = wand(wmul(a, b), wmask_xyz.v);
 	return wsum(m);
 #else
 	register float4 m = wmul(a, b);
@@ -208,7 +204,11 @@ float4 wdot3(float4 a, float4 b) {
 void wprint(float4 w)
 {
 	float4s v;
-	wstore(&v, w);
+	wstore(v, w);
 	printf("(%f, %f, %f, %f)\n", v.x, v.y, v.z, v.w);
 }
+
+}
+
+#endif // _FLOAT4_H_
 

@@ -13,17 +13,23 @@
 #include "basic.h"
 #include <float.h>
 
-typedef double GameTime;
-
-CAPI void time_start();
-CAPI void time_stop();
-CAPI GameTime time_tick();
-CAPI GameTime time_now();
-CAPI void time_set_speed(double modifier);
-CAPI double time_get_speed();
-
-static inline GameTime time_never() { return 0.0; }
-static inline GameTime time_forever() { return DBL_MAX; }
+namespace wings {
+	typedef double GameTime;   // in-game seconds since engine init
+	typedef double SystemTime; // real-life seconds since UNIX epoch
+	
+	namespace time {
+		void start();
+		void stop();
+		GameTime tick();
+		GameTime now();
+		void set_speed(double modifier);
+		double get_speed();
+		SystemTime system_now();
+		
+		static const GameTime NEVER = 0.0;
+		static const GameTime FOREVER = DBL_MAX;
+	}
+}
 
 
 #endif // _GAMETIME_H_

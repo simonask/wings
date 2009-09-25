@@ -8,11 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 #import "FallingAppDelegate.h"
-#include "engine.h"
+//#include "engine.h"
 
 
 @interface GameApplication : NSApplication {
-	Engine* engine;
+	BOOL running;
 }
 -(void)run;
 -(void)runOnce;

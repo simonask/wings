@@ -7,15 +7,11 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#include "engine.h"
-
 
 @interface EngineView : NSView {
-	Engine* engine;
 	NSOpenGLContext* gl;
 }
-@property (assign) Engine* engine;
--(void)setupEngine:(Engine*)engine;
+-(void)engineResize;
 -(void)update;
 
 @end

@@ -10,18 +10,20 @@
 
 
 @implementation GameApplication
+- (id)init {
+	self = [super init];
+	running = YES;
+	return self;
+}
+
 - (void)run {
 	NSRunLoop* loop = [[NSRunLoop currentRunLoop] retain];
 	[self finishLaunching];
 	
-	engine = engine_initialize();
-	engine_start(engine);
-	
 	FallingAppDelegate* delegate = (FallingAppDelegate*)[self delegate];
 	EngineView* view = [delegate engineView];
-	[view setupEngine:engine];
 	
-	while (engine_is_running(engine)) {
+	while (running) {
 		// listen for events, send them to self (assuming that EngineView is first responder)
 		while (YES) {
 			NSEvent* event = [self nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -32,8 +34,6 @@
 		
 		[view update];
 	}
-	
-	engine_destroy(engine);
 	
 	[loop release];
 }

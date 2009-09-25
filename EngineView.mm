@@ -8,19 +8,38 @@
 
 #import "EngineView.h"
 #include "events.h"
+#include "game.h"
+using namespace wings;
 
 @implementation EngineView
-@synthesize engine;
 
 - (id)initWithFrame:(NSRect)frame {
+	ASSERT(!game::is_initialized()); // only one EngineView per process, please!
+	game::initialize();
+	
 	self = [super initWithFrame:frame];
 	if (self) {
-		gl = nil;
+		NSOpenGLPixelFormatAttribute attrs[] =
+		{
+			NSOpenGLPFADoubleBuffer,
+			NSOpenGLPFADepthSize, 0,
+			0
+		};
+		
+		id attr = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
+		gl = [[NSOpenGLContext alloc] initWithFormat:attr shareContext:nil];
+		[attr release];
+		
+		[gl makeCurrentContext];
+		game::setup_opengl();
+		
+		[self engineResize];
 	}
 	return self;
 }
 
 - (void)dealloc {
+	game::deinitialize();
 	if (gl != nil)
 		[gl release];
 	[super dealloc];
@@ -42,43 +61,22 @@
 	NSRect frame = [self bounds];
 	[gl update];
 	[gl makeCurrentContext];
-	engine_resize_window(engine, (float)frame.size.width, (float)frame.size.height);
-}
-
-- (void)setupEngine:(Engine*)e {
-	self.engine = e;
-	NSOpenGLPixelFormatAttribute attrs[] =
-	{
-		NSOpenGLPFADoubleBuffer,
-		NSOpenGLPFADepthSize, 0,
-		0
-	};
-	
-	id attr = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
-	gl = [[NSOpenGLContext alloc] initWithFormat:attr shareContext:nil];
-	[attr release];
-	
-	[gl makeCurrentContext];
-	engine_setup_opengl(engine);
-	
-	[self engineResize];
+	game::window_resized((float)frame.size.width, (float)frame.size.height);
 }
 
 - (void)update {
-	engine_game_update(engine);
+	game::update();
 	
 	if ([gl view] != self)
 		[gl setView:self];
 	
-	if (engine_needs_render(engine))
+	if (game::needs_render())
 		[self setNeedsDisplay:YES];
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-	if (!engine) return;
-	
 	[gl makeCurrentContext];
-	engine_render_pass(engine);
+	game::render();
 	[gl flushBuffer];
 }
 
@@ -92,7 +90,7 @@
 	e.type = EVENT_TYPE_KEY_DOWN;
 	e.key.key = [theEvent keyCode];
 	e.key.modifiers = (unsigned int)([theEvent modifierFlags] >> 16);
-	engine_send_event(engine, &e);
+	game::send_event(e);
 }
 
 - (void)keyUp:(NSEvent *)theEvent {
@@ -100,7 +98,7 @@
 	e.type = EVENT_TYPE_KEY_UP;
 	e.key.key = [theEvent keyCode];
 	e.key.modifiers = (unsigned int)([theEvent modifierFlags] >> 16);
-	engine_send_event(engine, &e);
+	game::send_event(e);
 }
 
 - (void)engineMouseEvent:(EventType)type button:(MouseButton)button {
@@ -112,7 +110,7 @@
 	e.mouse.x = point.x;
 	e.mouse.y = point.y;
 	
-	engine_send_event(engine, &e);
+	game::send_event(e);
 }
 
 - (void)mouseDown:(NSEvent*)theEvent {
@@ -145,7 +143,7 @@
 	e.mouse.button = MOUSE_BUTTON_SCROLL;
 	e.mouse.x = [theEvent deltaX];
 	e.mouse.y = [theEvent deltaY];
-	engine_send_event(engine, &e);
+	game::send_event(e);
 }
 
 - (void)mouseMoved:(NSEvent *)theEvent {

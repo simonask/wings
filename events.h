@@ -10,6 +10,9 @@
 #ifndef _EVENT_H_
 #define _EVENT_H_
 
+namespace wings
+{
+
 typedef enum {
 	EVENT_TYPE_KEY_DOWN     = 1,
 	EVENT_TYPE_KEY_UP       = 1 << 1,
@@ -47,6 +50,8 @@ typedef struct {
 	};
 } Event;
 
-typedef void(*EventListenerFunc)(const Event* event, void* data);
+typedef void(*EventListenerFunc)(const Event& event, void* data);
+
+}
 
 #endif // _EVENT_H_
