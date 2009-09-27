@@ -31,4 +31,8 @@
 
 typedef unsigned char byte;
 
+namespace wings {
+	class String;
+}
+
 #endif
