@@ -15,7 +15,8 @@ using namespace wings;
 
 - (id)initWithFrame:(NSRect)frame {
 	ASSERT(!game::is_initialized()); // only one EngineView per process, please!
-	game::initialize();
+	NSString* resource_path = [[NSBundle mainBundle] resourcePath];
+	game::initialize([resource_path UTF8String]);
 	
 	self = [super initWithFrame:frame];
 	if (self) {

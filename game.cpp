@@ -12,7 +12,10 @@
 #include "float4.h"
 #include "array.h"
 #include "render.h"
+#include "str.h"
 #include <OpenGL/gl.h>
+
+#include <iomanip>
 
 namespace wings {
 namespace game {
@@ -20,7 +23,9 @@ namespace game {
 	static bool running = false;
 	static bool paused = false;
 	static GameTime last_game_update = time::NEVER;
+	static SystemTime last_render = time::NEVER;
 	static double fps = 0.0;
+	static String resource_base_path;
 		
 	static struct {
 		float zoom;
@@ -56,7 +61,9 @@ namespace game {
 	static Array<RenderCallback> render_callbacks;
 	
 	
-	void initialize() {
+	void initialize(const char* base_path) {
+		resource_base_path = base_path;
+		resource_base_path += "/";
 		camera.zoom = 1.0f;
 		initialized = true;
 		event_callbacks.preallocate(256);
@@ -72,12 +79,17 @@ namespace game {
 	}
 	
 	void start() {
+		running = true;
+		paused = false;
 	}
 	
 	void stop() {
+		running = false;
+		paused = false;
 	}
 	
 	void pause() {
+		paused = true;
 	}
 	
 	bool is_running() { return running; }
@@ -89,7 +101,14 @@ namespace game {
 	}
 	
 	void update() {
+		ASSERT(initialized);
+		static bool ddd = false;
+		if (!ddd) {
+			debug::text(10, 10) << "Hello World!";
+			ddd = true;
+		}
 		
+		last_game_update = time::now();
 	}
 	
 	bool needs_render() {
@@ -97,6 +116,8 @@ namespace game {
 	}
 	
 	void render() {
+		ASSERT(initialized);
+		
 		float half_width;
 		float half_height;
 		
@@ -155,16 +176,16 @@ namespace game {
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0.0, half_width*2, half_height*2, 0.0, -1.0, 1.0);
-		glMatrixMode(GL_MODELVIEW);
-		glBegin(GL_QUADS);
-		{
-			glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-			glVertex2f(0.0f, 0.0f);
-			glVertex2f(100.f, 0.0f);
-			glVertex2f(100.f, 100.f);
-			glVertex2f(0.0f, 100.f);
-		}
-		glEnd();
+		
+		SystemTime now = time::system_now();
+		SystemTime diff = now - last_render;
+		fps = 1.0 / diff;
+		
+		debug::text(0, 0, 0) << std::setprecision(4) << std::setw(5) << std::setfill('0') << fps << " fps";
+		
+		debug::render();
+		
+		last_render = now;
 	}
 	
 	void send_event(const Event& e) {
@@ -192,6 +213,10 @@ namespace game {
 		window_size.x = width;
 		window_size.y = height;
 		glViewport(0, 0, width, height);
+	}
+	
+	String resource_path(const String& subpath) {
+		return resource_base_path + subpath;
 	}
 }
 }

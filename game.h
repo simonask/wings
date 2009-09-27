@@ -9,11 +9,12 @@
 
 #include "basic.h"
 #include "events.h"
+#include "str.h"
 
 namespace wings {
 	
 namespace game {
-	void initialize();
+	void initialize(const char* resource_base_path);
 	void deinitialize();
 	bool is_initialized();
 	void start();
@@ -31,6 +32,8 @@ namespace game {
 	void unregister_event_listener(EventListenerFunc callback, void* userdata);
 	
 	void window_resized(float width, float height);
+	
+	String resource_path(const String& subpath);
 }
 					
 }
