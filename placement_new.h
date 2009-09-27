@@ -10,8 +10,6 @@
 #ifndef WINGS_PLACEMENT_NEW_H
 #define WINGS_PLACEMENT_NEW_H
 
-void* operator new(size_t sz, void* ptr) {
-	return ptr;
-}
+#include <new>
 
 #endif
