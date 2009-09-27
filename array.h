@@ -121,6 +121,17 @@ namespace wings {
 			return top();
 		}
 		
+		void erase(size_t i) {
+			ASSERT(i < _size);
+			if (i == _size - 1) {
+				_data[i].~T();
+				--_size;
+			} else {
+				copy_range(_data + i, _data + i + 1, _size-i);
+				_data[_size--].~T();
+			}
+		}
+		
 		void qsort() {
 			// TODO: Don't use libc's qsort, for better inlining
 			::qsort(_data, _size, sizeof(T), sort_compare_callback);
